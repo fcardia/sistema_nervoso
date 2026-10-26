@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Atlante SNC – Quiz</title>
+  <link rel="stylesheet" href="css/stile.css">
+</head>
+<body>
+  <!-- Barra superiore: scelta tavola e punteggi -->
+  <header class="barra">
+    <div class="nav-tavole">
+      <button id="btn-prec" class="btn icona" title="Tavola precedente" aria-label="Tavola precedente">‹</button>
+      <select id="sel-tavola" aria-label="Scegli la tavola"></select>
+      <button id="btn-succ" class="btn icona" title="Tavola successiva" aria-label="Tavola successiva">›</button>
+    </div>
+    <div class="punteggi">
+      <span id="punteggio-tavola" title="Punteggio di questa tavola"></span>
+      <span id="punteggio-totale" class="secondario" title="Punteggio complessivo"></span>
+    </div>
+  </header>
+
+  <!-- Area della tavola: zoom e trascinamento -->
+  <main id="viewport" class="viewport">
+    <div id="scena" class="scena">
+      <img id="immagine" alt="" draggable="false">
+      <svg id="linee-modifica" class="linee-modifica" preserveAspectRatio="none"></svg>
+      <div id="strato-punti" class="strato-punti"></div>
+    </div>
+
+    <div class="zoom-ctrl">
+      <button id="btn-zoom-piu" class="btn icona" aria-label="Ingrandisci">+</button>
+      <button id="btn-zoom-meno" class="btn icona" aria-label="Riduci">−</button>
+      <button id="btn-zoom-adatta" class="btn icona" aria-label="Adatta allo schermo" title="Adatta">⤢</button>
+    </div>
+
+    <div id="avviso-modifica" class="avviso-modifica" hidden>
+      Modalità modifica: trascina i pallini · tocca un pallino per modificarne nome e sinonimi
+    </div>
+  </main>
+
+  <!-- Campo di risposta (si apre accanto al pallino) -->
+  <form id="box-risposta" class="box-risposta" hidden autocomplete="off">
+    <div class="box-titolo"><span id="risposta-indice"></span><button type="button" id="btn-chiudi-risposta" class="btn-x" aria-label="Chiudi">×</button></div>
+    <div class="riga">
+      <input id="input-risposta" type="text" placeholder="Nome della struttura…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      <button type="submit" class="btn primario">OK</button>
+    </div>
+  </form>
+
+  <!-- Pannello di modifica di un punto -->
+  <form id="box-modifica" class="box-risposta" hidden autocomplete="off">
+    <div class="box-titolo"><span id="modifica-titolo"></span><button type="button" id="btn-chiudi-modifica" class="btn-x" aria-label="Chiudi">×</button></div>
+    <label>Nome<input id="mod-nome" type="text"></label>
+    <label>Sinonimi (separati da ;)<input id="mod-sinonimi" type="text"></label>
+    <label class="check"><input id="mod-incerto" type="checkbox"> Punto incerto</label>
+    <div class="riga"><button type="submit" class="btn primario">Salva</button></div>
+  </form>
+
+  <!-- Barra inferiore: comandi del quiz -->
+  <footer class="barra comandi">
+    <button id="btn-prossimo" class="btn primario">Prossimo punto</button>
+    <button id="btn-etichette" class="btn">Nascondi etichette</button>
+    <label class="check"><input id="chk-casuale" type="checkbox"> Ordine casuale</label>
+    <button id="btn-ripeti" class="btn">Ripeti sbagliati/vicini</button>
+    <button id="btn-tutti" class="btn" hidden>Mostra tutti i punti</button>
+    <button id="btn-azzera" class="btn">Azzera tavola</button>
+    <span class="spaziatore"></span>
+    <button id="btn-modifica" class="btn">Modifica</button>
+    <span id="comandi-modifica" hidden>
+      <button id="btn-scarica" class="btn">Scarica JSON</button>
+      <button id="btn-scarica-js" class="btn" title="File da copiare in data/ per rendere permanenti le modifiche">Scarica tavole.js</button>
+      <button id="btn-annulla-mod" class="btn">Annulla modifiche</button>
+    </span>
+  </footer>
+
+  <!-- Dati separati dalla logica: data/tavole.js (rigenerabile con tools/estrai.py) -->
+  <script src="data/tavole.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/valutazione.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
