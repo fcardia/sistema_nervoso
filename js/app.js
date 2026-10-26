@@ -21,6 +21,7 @@
   let ordine = [];            // ordine dei punti per "Prossimo punto"
   let filtro = null;          // Set di id quando si ripetono solo sbagliati/vicini
   let attivo = null;          // id del punto con il campo di risposta aperto
+  let aiutoUsato = null;      // null | "suggerimento" | "soluzione" per il punto aperto
   let guidato = false;        // true se il campo è stato aperto con "Prossimo punto"
   let inModifica = false;
   const vista = { s: 1, tx: 0, ty: 0, adatta: 1 };   // zoom e spostamento
@@ -30,7 +31,7 @@
   const el = {
     viewport: $("viewport"), scena: $("scena"), img: $("immagine"), punti: $("strato-punti"),
     linee: $("linee-modifica"), sel: $("sel-tavola"), ptTav: $("punteggio-tavola"), ptTot: $("punteggio-totale"),
-    box: $("box-risposta"), input: $("input-risposta"), indice: $("risposta-indice"),
+    box: $("box-risposta"), aiuto: $("aiuto-testo"), input: $("input-risposta"), indice: $("risposta-indice"),
     boxMod: $("box-modifica"), modTitolo: $("modifica-titolo"), modNome: $("mod-nome"),
     modSin: $("mod-sinonimi"), modInc: $("mod-incerto"),
     btnEtichette: $("btn-etichette"), chkCasuale: $("chk-casuale"), btnRipeti: $("btn-ripeti"),
@@ -113,7 +114,8 @@
         const e = document.createElement("div");
         e.className = "etichetta " + r.esito + (x > 62 ? " sinistra" : "");
         e.style.left = x + "%"; e.style.top = y + "%";
-        const tua = r.esito === "corretta" ? escape(r.risposta) : `<s>${escape(r.risposta) || "—"}</s>`;
+        const tua = r.esito === "vista" ? (r.risposta ? escape(r.risposta) + " · soluzione vista" : "soluzione vista")
+          : r.esito === "corretta" ? escape(r.risposta) : `<s>${escape(r.risposta) || "—"}</s>`;
         e.innerHTML = `<b>${escape(p.nome)}</b>${p.incerto ? " <span title='posizione incerta'>(?)</span>" : ""}` +
           `<br><span class="tua">tu: ${tua}</span>`;
         el.punti.appendChild(e);
@@ -142,9 +144,9 @@
   // ---------------------------------------------------------------- punteggi
   function conteggio(t) {
     const pr = progressi[t.id] || {};
-    const c = { corretta: 0, vicina: 0, sbagliata: 0, totale: t.punti.length };
+    const c = { corretta: 0, vicina: 0, sbagliata: 0, vista: 0, totale: t.punti.length };
     for (const p of t.punti) if (pr[p.id]) c[pr[p.id].esito]++;
-    c.risposte = c.corretta + c.vicina + c.sbagliata;
+    c.risposte = c.corretta + c.vicina + c.sbagliata + c.vista;
     c.punti = c.corretta + c.vicina * CONFIG.PUNTEGGIO_VICINA;
     return c;
   }
@@ -155,7 +157,8 @@
     el.ptTav.innerHTML = `Tavola: <b>${c.risposte}/${c.totale}</b> · ` +
       `<span style="color:var(--corretta)">✔ ${c.corretta}</span> ` +
       `<span style="color:var(--vicina)">≈ ${c.vicina}</span> ` +
-      `<span style="color:var(--sbagliata)">✘ ${c.sbagliata}</span> · ${pct}%`;
+      `<span style="color:var(--sbagliata)">✘ ${c.sbagliata}</span> ` +
+      `<span style="color:var(--vista)" title="soluzione vista">👁 ${c.vista}</span> · ${pct}%`;
     const tot = tavole.map(conteggio).reduce((a, b) => ({
       punti: a.punti + b.punti, totale: a.totale + b.totale, risposte: a.risposte + b.risposte
     }), { punti: 0, totale: 0, risposte: 0 });
@@ -173,8 +176,44 @@
     const fatti = conteggio(tav).risposte;
     el.indice.textContent = r ? "Riprova questo punto" : `Punto ${fatti + 1} di ${tav.punti.length}`;
     el.input.value = "";
+    aiutoUsato = null;
+    el.aiuto.hidden = true;
+    el.aiuto.classList.remove("soluzione");
     el.box.hidden = false;
     posizionaBox(el.box, id);
+    el.input.focus({ preventScroll: true });
+  }
+
+  /** Suggerimento: per nomi di più parole mostra una sola parola, la prima caratterizzante
+   *  (saltando articoli e parole generiche come "circonvoluzione", "solco", "nucleo"), con le altre
+   *  sostituite da "…"; per nomi di una sola parola mostra le prime lettere ("encef…"). */
+  function suggerimento(nome) {
+    const parole = nome.split(/\s+/);
+    if (parole.length === 1) {
+      const n = Math.max(2, Math.round(nome.length * CONFIG.QUOTA_LETTERE_SUGGERIMENTO));
+      return nome.slice(0, Math.min(n, nome.length - 1)) + "…";
+    }
+    const pulita = w => w.replace(/[^\p{L}\d]/gu, "").toLowerCase();
+    const scarta = w => CONFIG.PAROLE_VUOTE.includes(pulita(w)) || CONFIG.PAROLE_GENERICHE.includes(pulita(w));
+    const chiave = parole.find(w => !scarta(w)) || parole.find(w => !CONFIG.PAROLE_VUOTE.includes(pulita(w))) || parole[0];
+    // parole nascoste sostituite da "…", senza ripetere "…" consecutivi
+    return parole.map(w => w === chiave ? w.replace(/,$/, "") : "…")
+      .filter((w, i, a) => !(w === "…" && a[i - 1] === "…")).join(" ");
+  }
+
+  function mostraAiuto(tipo) {
+    if (!attivo) return;
+    const p = puntoDaId(attivo);
+    if (tipo === "soluzione") {
+      aiutoUsato = "soluzione";
+      el.aiuto.textContent = p.nome;
+      el.aiuto.classList.add("soluzione");
+    } else {
+      if (aiutoUsato !== "soluzione") aiutoUsato = "suggerimento";
+      el.aiuto.textContent = "Suggerimento: " + suggerimento(p.nome);
+    }
+    el.aiuto.hidden = false;
+    posizionaBox(el.box, attivo);
     el.input.focus({ preventScroll: true });
   }
 
@@ -200,8 +239,12 @@
     if (!attivo) return;
     const p = puntoDaId(attivo);
     const testo = el.input.value.trim();
-    const { esito } = Valutazione.valuta(testo, p);
-    prog()[p.id] = { esito, risposta: testo };
+    let { esito } = Valutazione.valuta(testo, p);
+    // con la soluzione mostrata il punto conta come sbagliato; col suggerimento al massimo "vicina"
+    if (aiutoUsato === "soluzione") esito = "vista";   // viola: non vale punti, ma non è un errore
+    else if (aiutoUsato === "suggerimento" && CONFIG.SUGGERIMENTO_PENALIZZA && esito === "corretta") esito = "vicina";
+    const nota = aiutoUsato === "suggerimento" ? " (con suggerimento)" : "";
+    prog()[p.id] = { esito, risposta: testo + nota };
     scrivi(CHIAVI.progressi, progressi);
     const eraGuidato = guidato;
     chiudiBox();
@@ -460,6 +503,8 @@
   el.box.addEventListener("submit", inviaRisposta);
   el.boxMod.addEventListener("submit", inviaModifica);
   $("btn-chiudi-risposta").onclick = chiudiBox;
+  $("btn-suggerimento").onclick = () => mostraAiuto("suggerimento");
+  $("btn-soluzione").onclick = () => mostraAiuto("soluzione");
   $("btn-chiudi-modifica").onclick = chiudiBox;
   $("btn-prossimo").onclick = prossimoPunto;
   el.btnEtichette.onclick = () => impostaEtichette(!pref.etichette);

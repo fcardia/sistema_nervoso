@@ -16,6 +16,16 @@ window.CONFIG = {
   // Valore di una risposta "vicina" nel punteggio (corretta = 1, sbagliata = 0)
   PUNTEGGIO_VICINA: 0.5,
 
+  // Aiuti nel campo di risposta:
+  // - con il suggerimento una risposta corretta conta come "vicina" (false = nessuna penalità)
+  // - mostrare la soluzione registra il punto come "vista" (viola): 0 punti, ma non conta come errore
+  SUGGERIMENTO_PENALIZZA: true,
+  // Nome di una sola parola: quota di lettere mostrate nel suggerimento (es. "encef…")
+  QUOTA_LETTERE_SUGGERIMENTO: 0.4,
+  // Parole troppo generiche per fare da suggerimento (si mostra la prima parola non in elenco)
+  PAROLE_GENERICHE: ["circonvoluzione", "circonvoluzioni", "giro", "giri", "solco", "solchi", "scissura",
+    "fessura", "nucleo", "nuclei", "lobulo", "lobo", "nervo", "nervi", "corpo", "parte", "ramo"],
+
   // Articoli e preposizioni ignorati all'inizio della risposta (e come parole non-chiave)
   PAROLE_VUOTE: ["il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una", "di", "del", "dello",
     "della", "dei", "degli", "delle", "da", "dal", "dallo", "dalla", "a", "al", "allo", "alla",

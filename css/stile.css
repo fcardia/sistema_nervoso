@@ -10,6 +10,7 @@
   --corretta: #16a34a;
   --vicina: #f59e0b;
   --sbagliata: #dc2626;
+  --vista: #8b5cf6;          /* soluzione vista */
   --dim-punto: 22px;         /* diametro del pallino sullo schermo */
 }
 @media (prefers-color-scheme: dark) {
@@ -83,6 +84,7 @@ select, input[type=text] {
 .punto.corretta { background: var(--corretta); }
 .punto.vicina { background: var(--vicina); }
 .punto.sbagliata { background: var(--sbagliata); }
+.punto.vista { background: var(--vista); }
 .punto.attivo { box-shadow: 0 0 0 3px var(--accento), 0 0 0 7px rgba(37,99,235,.35); z-index: 4;
   animation: pulsa 1.2s ease-in-out infinite; }
 .punto.incerto { border-style: dashed; }
@@ -106,6 +108,7 @@ select, input[type=text] {
 }
 .etichetta.sinistra { transform-origin: 100% 50%; translate: calc(-100% - 16px) -50%; }
 .etichetta.corretta { border-left-color: var(--corretta); }
+.etichetta.vista { border-left-color: var(--vista); }
 .etichetta.vicina { border-left-color: var(--vicina); }
 .etichetta .tua { color: #5c6470; font-size: 12px; }
 .etichetta .tua s { color: #b91c1c; }
@@ -130,6 +133,10 @@ select, input[type=text] {
 .btn-x { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--testo-2); cursor: pointer; padding: 0 4px; }
 .riga { display: flex; gap: 6px; }
 .riga input { flex: 1; min-width: 0; font-size: 16px; }   /* 16px: evita lo zoom automatico su iOS */
+.btn.piccolo { font-size: 13px; padding: 5px 9px; flex: 1; }
+.aiuto-testo { font-size: 14px; padding: 6px 9px; border-radius: 8px; background: rgba(245,158,11,.15);
+  border-left: 3px solid var(--vicina); }
+.aiuto-testo.soluzione { background: rgba(139,92,246,.15); border-left-color: var(--vista); font-weight: 600; }
 .box-risposta label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--testo-2); }
 .box-risposta label.check { flex-direction: row; }
 
